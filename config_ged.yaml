@@ -1,0 +1,24 @@
+model:
+  node_dim: 32  # node-level embedding size (also hidden dim)
+  edge_dim: 32  # edge-level embedding size (also hidden dim)
+  inter_geom_dim: none  # initial dimension of the edge features
+  graph_dim: 128  # graph-level embedding size
+  num_layers: 5  # number of consecutive message passing layers
+  type: matching  # type of graph neural network ("matching": cross graph sharing or "normal": no cross-graph sharing)
+  layer_norm: True  # layer normalization active or not
+  similarity: dot  # distance type for cross attention blocks
+  linear: residual  # type of neural network ("normal": normal MLP, "residual": resnet-like)
+  message_gain: 0.1  # scale the initialization of the message passing MLPs
+  node_update_type: gru  # type of neural network to do the node update
+optimize:
+  cuda: True  # processor type for training
+  distance: margin  # distance type for loss
+  margin: 1  # value for the margin loss
+  n_iterations: 500000  # number of iterations
+  lr: 1e-4  # learning rate
+  batch_size: 20
+data:
+  kp: 1
+  kn: 2
+  pe: 0.2
+  num_nodes: 20
