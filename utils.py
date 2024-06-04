@@ -3,9 +3,11 @@ import numpy as np
 import torch
 import random
 import copy
+import os
+import pickle
 
 
-def generate_binomial_graph(num_nodes=20, pe=0.2, is_connected=True):
+def generate_binomial_graph(num_nodes=20, pe=0.2, is_connected=True, seed=None):
     n = sample_number_of_nodes(num_nodes)
     p = sample_edge_probability(pe)
 
@@ -13,7 +15,7 @@ def generate_binomial_graph(num_nodes=20, pe=0.2, is_connected=True):
 
     if is_connected:
         while not nx.is_connected(G):
-            G = nx.erdos_renyi_graph(n, p)
+            G = nx.erdos_renyi_graph(n, p, seed=seed)
 
     return G, n
 
@@ -140,3 +142,22 @@ def load_checkpoint(model, filename):
                 .format(filename))
     else:
         print("=> no checkpoint found at '{}'".format(filename))
+
+
+def save_pickle(object, filename):
+    """
+    Saves a pickled file.
+    """
+    with open(filename, 'wb') as f:
+        pickle.dump(object, f)
+    f.close()
+
+
+def load_pickle(filename):
+    """
+    Loads a pickled file.
+    """
+    with open(filename, 'rb') as f:
+        object = pickle.load(f)
+        f.close()
+    return object

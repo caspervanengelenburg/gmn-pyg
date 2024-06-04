@@ -20,7 +20,7 @@ class TripletDatasetGED(Dataset):
                  node_dim=None, edge_dim=None,
                  is_connected=True, permute=True):
 
-        super(Dataset).__init__()
+        super(TripletDatasetGED).__init__()
 
         self.size = int(size)
         self.num_nodes = num_nodes
