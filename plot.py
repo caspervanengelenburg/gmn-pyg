@@ -195,3 +195,64 @@ def plot_graph_beautiful(
     nx.draw_networkx_edges(G, pos, ax=ax, edgelist=edge_list,
                            edge_color=c_edge, width=edge_size,
                            connectionstyle=connectionstyle)
+
+
+def plot_difference_graphs(G1, G2,
+                           fs=4,
+                           fs_title=5,
+                           background="white",
+                           node_color="black",
+                           edge_color="black",
+                           node_size=None,
+                           edge_size=None,
+                           pos = "circular"):
+    """Plots difference between two graphs."""
+
+    if node_size is None:
+        node_size=50*fs,
+    if edge_size is None:
+        edge_size=fs/4
+
+    if set(G1.nodes()) != set(G1.nodes()):
+        raise ValueError("The node sets of the two graphs are not the same")
+
+    # get fixed node positions if not already given
+    if pos == "circular":
+        pos = nx.circular_layout(G1)
+    elif pos == "spring":
+        pos = nx.spring_layout(G1)
+
+    # edge sets
+    edges_1 = set(G1.edges())
+    edges_2 = set(G2.edges())
+
+    # get removed and added edges
+    edges_removed = edges_1.difference(edges_2)  # diff between edge set 1 and edge set 2
+    edges_added = edges_2.difference(edges_1)  # diff between edge set 2 and edge set 1
+
+    # set up plot
+    _, axs = set_figure(1, 2, fs=fs, fc=background, fs_title=fs_title)
+
+    # plot G1
+    ax = axs[0]
+    ax.set_title(f"Graph 1\nremoved edges in red")
+    plot_graph_beautiful(G1, ax, pos=pos,
+                         edge_list=list(edges_1-edges_removed),
+                         c_node=node_color, c_edge=edge_color,
+                         node_size=node_size, edge_size=edge_size)
+    plot_graph_beautiful(G1, ax, pos=pos,
+                         edge_list=list(edges_removed),
+                         c_node=node_color, c_edge="red",
+                         node_size=node_size, edge_size=edge_size*4)
+
+    # plot G1
+    ax = axs[1]
+    ax.set_title(f"Graph 2\nadded edges in green")
+    plot_graph_beautiful(G2, ax, pos=pos,
+                         edge_list=list(edges_2-edges_added),
+                         c_node=node_color, c_edge=edge_color,
+                         node_size=node_size, edge_size=edge_size)
+    plot_graph_beautiful(G2, ax, pos=pos,
+                         edge_list=list(edges_added),
+                         c_node=node_color, c_edge="green",
+                         node_size=node_size, edge_size=edge_size*4)

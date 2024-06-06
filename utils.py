@@ -21,23 +21,25 @@ def generate_binomial_graph(num_nodes=20, pe=0.2, is_connected=True, seed=None):
 
 
 def sample_number_of_nodes(num_nodes):
-    if isinstance(num_nodes, list):
-        n = np.random.randint(num_nodes[0], num_nodes[1])
-    elif isinstance(num_nodes, int):
+    if isinstance(num_nodes, int):
         n = num_nodes
     else:
-        raise ValueError("Number of nodes should be a list (of two integers) or integer")
+        try:
+            n = np.random.randint(num_nodes[0], num_nodes[1])
+        except:
+            raise ValueError("Number of nodes should be a list (of two integers) or integer")
 
     return n
 
 
 def sample_edge_probability(pe):
-    if isinstance(pe, list):
-        p = np.random.uniform(pe[0], pe[1])
-    elif isinstance(pe, float):
+    if isinstance(pe, float):
         p = pe
     else:
-        raise ValueError("Edge probability should be a list (of two floats) or float")
+        try:
+            p = np.random.uniform(pe[0], pe[1])
+        except:
+            raise ValueError("Edge probability should be a list (of two floats) or float")
 
     return p
 
@@ -102,6 +104,7 @@ def reshape_and_split_tensors(graph_feats, n_splits):
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""
+
     def __init__(self):
         self.reset()
 
@@ -112,7 +115,7 @@ class AverageMeter(object):
         self.count = 0
 
     def update(self, val, n=1, alpha=0.1):
-        self.moving_avg = alpha * val + (1-alpha) * self.val
+        self.moving_avg = alpha * val + (1 - alpha) * self.val
         self.val = val
         self.sum += val * n
         self.count += n
@@ -128,7 +131,8 @@ def load_checkpoint(model, filename):
     if os.path.isfile(filename):
         print("=> loading checkpoint '{}'".format(filename))
         checkpoint = torch.load(filename,
-            map_location=lambda storage, loc: storage.cuda() if torch.cuda.is_available() else storage.cpu())
+                                map_location=lambda storage,
+                                                    loc: storage.cuda() if torch.cuda.is_available() else storage.cpu())
 
         state_dict = checkpoint['state_dict']
 
@@ -139,7 +143,7 @@ def load_checkpoint(model, filename):
 
         model.load_state_dict(state_dict)
         print("=> loaded checkpoint '{}'"
-                .format(filename))
+              .format(filename))
     else:
         print("=> no checkpoint found at '{}'".format(filename))
 

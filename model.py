@@ -263,6 +263,7 @@ class GraphConvolutionNetwork(torch.nn.Module):
         self.num_layers = self.config.model.num_layers
         self.node_update_type = self.config.model.node_update_type
         self.message_gain = self.config.model.message_gain
+        self.return_node_feats = return_node_feats
 
         # graph encoder
         self.encoder = GraphEncoder(self.node_dim,
@@ -291,11 +292,35 @@ class GraphConvolutionNetwork(torch.nn.Module):
         for i in range(self.num_layers):
             node_feats = self.conv_layers[i](edge_index, node_feats, edge_feats, batch)
 
+
         # compute graph-level embeddings (graph aggregation mean)
         graph_feats = self.aggregator(node_feats, batch)
 
         # return node- and graph-level embeddings
         return node_feats, graph_feats
+
+    # To return node features only
+    def get_node_features(self, edge_index, x1, x2, edge_feats, batch, layers):
+
+        if int(torch.max(layers)) > self.num_layers:
+            raise ValueError("The layer index should not exceed the number of layers in the network.")
+
+        # encode nodes and edges (individual encoders)
+        node_feats, edge_feats = self.encoder(x1, x2, edge_feats)
+
+        # initialize dictionary for aggregating node features
+        node_feats_dict = {}
+
+        # compute node embeddings (graph matching convolutional layers)
+        for i in range(int(torch.max(layers))):  # only compute until layer of interest
+            node_feats = self.conv_layers[i](edge_index, node_feats, edge_feats, batch)
+            if i in layers:
+                # Add node features to dictionary:
+                # - key = i-th layer;
+                # - value = node features at layer i.
+                node_feats_dict[i] = node_feats
+
+        return node_feats_dict
 
 
 class GraphMatchingNetwork(GraphConvolutionNetwork):

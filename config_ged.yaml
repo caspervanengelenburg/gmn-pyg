@@ -16,7 +16,8 @@ optimize:
   margin: 1  # value for the margin loss
   n_iterations: 500000  # number of iterations
   lr: 1e-4  # learning rate
-  batch_size: 20
+  batch_size: 20  # batch size
+  graph_regularizer: 1e-6  # regularization term on the graph vector
 data:
   kp: 1
   kn: 2
