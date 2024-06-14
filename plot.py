@@ -19,7 +19,7 @@ def set_figure(nr,
     You can always change things later yourself through the outputs or plt.rc(...).
     """
 
-    fig, axs = plt.subplots(nr, nc, figsize=(fs * nc * ratio, fs * nr))
+    fig, axs = plt.subplots(nr, nc, figsize=(fs * nc, fs * nr * ratio))
     fig.set_facecolor(fc)
 
     try:
@@ -256,3 +256,93 @@ def plot_difference_graphs(G1, G2,
                          edge_list=list(edges_added),
                          c_node=node_color, c_edge="green",
                          node_size=node_size, edge_size=edge_size*4)
+
+
+def set_aspect_ratio(ax, ratio=1.0):
+
+    xleft, xright = ax.get_xlim()
+    ybottom, ytop = ax.get_ylim()
+    ax.set_aspect(abs((xright - xleft) / (ybottom - ytop)) * ratio)
+
+
+def plot_graph_features(graph_feats, fc='white', ratio=0.25, **kwargs):
+
+    # Global settings
+    fs = 8
+    tc = "white" if fc == "black" else "black"
+
+    # Set figure
+    fig, axs = set_figure(1, 2, fs=fs, fs_title=3, fs_axes=2.5, fs_xtick=2, fs_ytick=2, fc=fc)
+    # fig.suptitle("Graph output features")
+
+    x = graph_feats[0]
+    y = graph_feats[1]
+
+    # Loop through data
+    for i, data in enumerate([x, y]):
+        # Set axis index
+        ax = axs[i]
+
+        # Make up axis
+        ax.spines['bottom'].set_color(tc)
+        ax.spines['left'].set_color(tc)
+        ax.tick_params(axis='x', colors=tc)
+        ax.tick_params(axis='y', colors=tc)
+
+        # Plot features
+        ax.plot(data, **kwargs)
+
+        # Set axis labels
+        ax.axis(True)
+        ax.set_ylabel(f"Value", color=tc)
+        ax.set_xlabel(f"Feature index", color=tc)
+
+        # Set axis title
+        ax.set_title(f"Graph {i + 1}")
+
+        # Set aspect
+        set_aspect_ratio(ax, ratio=ratio)
+
+
+def plot_node_features(node_feats, N1, N2=None, layer=5, ratio=0.25, **kwargs):
+
+    # Global settings
+    fs = 8
+    fc = "white"
+    tc = "white" if fc == "black" else "black"
+
+    # Set figure
+    fig, axs = set_figure(1, 2, fs=fs, fs_title=3, fs_axes=2.5, fs_xtick=2, fs_ytick=2, fc=fc)
+    # fig.suptitle("Node output features")
+
+    x = node_feats[:N1]
+    if N2 is None:
+        y = node_feats[-N1:]
+    else:
+        y = node_feats[-N2:]
+
+    # Loop through data
+    for i, data in enumerate([x, y]):
+
+        # Set axis index
+        ax = axs[i]
+
+        # Make up axis
+        ax.spines['bottom'].set_color(tc)
+        ax.spines['left'].set_color(tc)
+        ax.tick_params(axis='x', colors=tc)
+        ax.tick_params(axis='y', colors=tc)
+
+        # Plot features
+        ax.plot(np.array(data.t()), **kwargs)
+
+        # Set axis labels
+        ax.axis(True)
+        ax.set_ylabel(f"Value", color=tc)
+        ax.set_xlabel(f"Feature index", color=tc)
+
+        # Set axis title
+        ax.set_title(f"Graph {i+1} @ Layer {layer}")
+
+         # Set aspect
+        set_aspect_ratio(ax, ratio=ratio)

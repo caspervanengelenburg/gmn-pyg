@@ -1,3 +1,6 @@
+import copy
+
+import numpy as np
 import torch.nn as nn
 import torch
 from torch_geometric.nn import MessagePassing, BatchNorm
@@ -169,12 +172,14 @@ class GMNConv(MessagePassing):
     def update(self, aggr_out, original_x, batch):
         cross_graph_attention = batch_pair_cross_attention(original_x, batch)
         attention_input = original_x - cross_graph_attention
+        inputs = torch.cat([aggr_out, attention_input], dim=1)
         if self.node_update_type == "gru":
-            aggr_out,_ = self.f_node(torch.cat([aggr_out, attention_input], dim=1))
+            _, outs = self.f_node(inputs.unsqueeze(0), original_x.unsqueeze(0))
+            outs = outs.squeeze(0)
         else:
-            aggr_out = self.f_node(torch.cat([aggr_out, attention_input], dim=1))
-        aggr_out = self.batch_norm(aggr_out)
-        return aggr_out
+            outs = self.f_node(inputs)
+        outs = self.batch_norm(outs)
+        return outs
 
 
 class GConv(MessagePassing):
@@ -215,11 +220,14 @@ class GConv(MessagePassing):
         # cross_graph_attention = batch_pair_cross_attention(original_x, batch)
         # attention_input = original_x - cross_graph_attention
         if self.node_update_type == "gru":
-            aggr_out,_ = self.f_node(aggr_out)
+            # inputs = torch.cat([aggr_out, x], dim=1)
+            # inputs = inputs.unsqueeze(0)
+            _, outs = self.f_node(aggr_out.unsqueeze(0), original_x.unsqueeze(0))
+            outs = outs.squeeze(0)
         else:
-            aggr_out = self.f_node(aggr_out)
-        aggr_out = self.batch_norm(aggr_out)
-        return aggr_out
+            outs = self.f_node(aggr_out)
+        outs = self.batch_norm(outs)
+        return outs
 
 
 # Graph Aggregation Module
@@ -263,7 +271,6 @@ class GraphConvolutionNetwork(torch.nn.Module):
         self.num_layers = self.config.model.num_layers
         self.node_update_type = self.config.model.node_update_type
         self.message_gain = self.config.model.message_gain
-        self.return_node_feats = return_node_feats
 
         # graph encoder
         self.encoder = GraphEncoder(self.node_dim,
@@ -302,7 +309,7 @@ class GraphConvolutionNetwork(torch.nn.Module):
     # To return node features only
     def get_node_features(self, edge_index, x1, x2, edge_feats, batch, layers):
 
-        if int(torch.max(layers)) > self.num_layers:
+        if int(np.max(layers)) > self.num_layers:
             raise ValueError("The layer index should not exceed the number of layers in the network.")
 
         # encode nodes and edges (individual encoders)
@@ -312,13 +319,13 @@ class GraphConvolutionNetwork(torch.nn.Module):
         node_feats_dict = {}
 
         # compute node embeddings (graph matching convolutional layers)
-        for i in range(int(torch.max(layers))):  # only compute until layer of interest
+        for i in range(int(np.max(layers))):  # only compute until layer of interest
             node_feats = self.conv_layers[i](edge_index, node_feats, edge_feats, batch)
-            if i in layers:
+            if (i+1) in layers:
                 # Add node features to dictionary:
                 # - key = i-th layer;
                 # - value = node features at layer i.
-                node_feats_dict[i] = node_feats
+                node_feats_dict[i+1] = copy.deepcopy(node_feats)
 
         return node_feats_dict
 

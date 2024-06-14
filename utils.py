@@ -11,10 +11,12 @@ def generate_binomial_graph(num_nodes=20, pe=0.2, is_connected=True, seed=None):
     n = sample_number_of_nodes(num_nodes)
     p = sample_edge_probability(pe)
 
-    G = nx.erdos_renyi_graph(n, p)
+    G = nx.erdos_renyi_graph(n, p, seed=seed)
 
     if is_connected:
         while not nx.is_connected(G):
+            if seed:
+                seed += 1
             G = nx.erdos_renyi_graph(n, p, seed=seed)
 
     return G, n
@@ -126,26 +128,36 @@ def save_checkpoint(state, filename):
     torch.save(state, f'{filename}.pth.tar')
 
 
-def load_checkpoint(model, filename):
-    filename = f'{filename}.pth.tar'
-    if os.path.isfile(filename):
-        print("=> loading checkpoint '{}'".format(filename))
-        checkpoint = torch.load(filename,
-                                map_location=lambda storage,
-                                                    loc: storage.cuda() if torch.cuda.is_available() else storage.cpu())
+# def load_checkpoint(model, filename):
+#     filename = f'{filename}.pth.tar'
+#     if os.path.isfile(filename):
+#         print("=> loading checkpoint '{}'".format(filename))
+#         checkpoint = torch.load(filename,
+#                                 map_location=lambda storage,
+#                                                     loc: storage.cuda() if torch.cuda.is_available() else storage.cpu())
+#
+#         state_dict = checkpoint['state_dict']
+#         cfg = checkpoint['config']
+#
+#         # new_state_dict = OrderedDict()
+#         # for k, v in state_dict.items():
+#         #     name = k[7:] # remove `module.`
+#         #     new_state_dict[name] = v
+#
+#         model.load_state_dict(state_dict)
+#         print("=> loaded checkpoint '{}'"
+#               .format(filename))
+#     else:
+#         print("=> no checkpoint found at '{}'".format(filename))
 
-        state_dict = checkpoint['state_dict']
+def load_checkpoint(filename, dir_checkpoints="checkpoints"):
 
-        # new_state_dict = OrderedDict()
-        # for k, v in state_dict.items():
-        #     name = k[7:] # remove `module.`
-        #     new_state_dict[name] = v
+    path_file = f"./{dir_checkpoints}/{filename}.pth.tar"
+    checkpoint = torch.load(path_file, map_location=lambda storage,
+                        loc: storage.cuda() if torch.cuda.is_available() else storage.cpu())
 
-        model.load_state_dict(state_dict)
-        print("=> loaded checkpoint '{}'"
-              .format(filename))
-    else:
-        print("=> no checkpoint found at '{}'".format(filename))
+    return checkpoint
+
 
 
 def save_pickle(object, filename):
